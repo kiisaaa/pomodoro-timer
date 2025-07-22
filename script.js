@@ -23,26 +23,18 @@ const progressPercent = document.getElementById("progress-percent");
 const audio = document.getElementById("bgm");
 const alarm = document.getElementById("alarmSound");
 
-// Request permission for notifications
-document.addEventListener("DOMContentLoaded", () => {
-  if ("Notification" in window && Notification.permission !== "granted") {
-    Notification.requestPermission().then(permission => {
-      console.log("Notification permission:", permission);
-    });
-  }
-
-  document.getElementById("start-btn").addEventListener("click", toggleTimer);
-
-  settingsModal.style.display = "none";
-  musicModal.style.display = "none";
-  aboutModal.style.display = "none";
-
-  switchMode("pomodoro");
-});
-
-function showNotification(title, message) {
+function showNotification(title, body) {
   if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, { body: message });
+    navigator.serviceWorker.getRegistration().then(reg => {
+      if (reg) {
+        reg.showNotification(title, {
+          body: body,
+          icon: "/icon-192.png",
+          vibrate: [200, 100, 200],
+          tag: "pomodoro-timer"
+        });
+      }
+    });
   }
 }
 
@@ -58,42 +50,31 @@ function switchMode(mode) {
   if (mode === "reverse") {
     totalSeconds = timeSettings.reverse;
     reverseStartTime = Date.now();
-  } else if (mode === "shortBreak") {
-    totalSeconds = timeSettings.shortBreak;
-  } else if (mode === "longBreak") {
-    totalSeconds = timeSettings.longBreak;
   } else {
-    totalSeconds = timeSettings.pomodoro;
+    totalSeconds = timeSettings[mode];
   }
 
   secondsLeft = totalSeconds;
   updateDisplay();
   updateProgressBar();
 
-  document.getElementById("shortBreak-mode").style.display =
-    mode === "reverse" ? "none" : "inline-block";
-  document.getElementById("longBreak-mode").style.display =
-    mode === "reverse" ? "none" : "inline-block";
+  document.getElementById("shortBreak-mode").style.display = mode === "reverse" ? "none" : "inline-block";
+  document.getElementById("longBreak-mode").style.display = mode === "reverse" ? "none" : "inline-block";
   earnedBreakDisplay.style.display = mode === "reverse" ? "block" : "none";
 
   if (mode === "reverse") {
-    earnedBreakDisplay.textContent =
-      "Work for up to 1 hour. The longer you work, the longer break you earn.";
+    earnedBreakDisplay.textContent = "Work for up to 1 hour. The longer you work, the longer break you earn.";
   }
 }
 
 function updateDisplay() {
   const minutes = Math.floor(secondsLeft / 60);
   const seconds = secondsLeft % 60;
-  timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(
-    seconds
-  ).padStart(2, "0")}`;
+  timerDisplay.textContent = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 }
 
 function updateProgressBar() {
-  const percent = Math.floor(
-    ((totalSeconds - secondsLeft) / totalSeconds) * 100
-  );
+  const percent = Math.floor(((totalSeconds - secondsLeft) / totalSeconds) * 100);
   progressBar.style.width = `${percent}%`;
   progressPercent.textContent = `${percent}%`;
 }
@@ -104,7 +85,7 @@ function toggleTimer() {
     isRunning = false;
   } else {
     isRunning = true;
-    showNotification("Pomodoro Started", "Your focus timer has begun!");
+    showNotification("Pomodoro Started", "Stay focused!");
     timer = setInterval(() => {
       if (secondsLeft > 0) {
         secondsLeft--;
@@ -114,7 +95,6 @@ function toggleTimer() {
         clearInterval(timer);
         isRunning = false;
         updateProgressBar();
-
         showNotification("Time's Up!", "Take a break or switch your mode.");
         if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
 
@@ -143,14 +123,12 @@ function openSettings() {
 function closeSettings() {
   settingsModal.style.display = "none";
 }
-
 function openMusic() {
   musicModal.style.display = "flex";
 }
 function closeMusic() {
   musicModal.style.display = "none";
 }
-
 function openAbout() {
   aboutModal.style.display = "flex";
 }
@@ -188,7 +166,20 @@ function loadMusic(event) {
 }
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker
-    .register("service-worker.js?v=2")
-    .then(() => console.log("Service Worker Registered"));
+  navigator.serviceWorker.register("service-worker.js").then(() =>
+    console.log("Service Worker Registered")
+  );
 }
+
+// Initial load
+window.onload = () => {
+  settingsModal.style.display = "none";
+  musicModal.style.display = "none";
+  aboutModal.style.display = "none";
+  switchMode("pomodoro");
+
+  // Ask for notification permission
+  if ('Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission();
+  }
+};
