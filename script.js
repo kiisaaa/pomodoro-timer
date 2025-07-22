@@ -173,9 +173,18 @@ function loadMusic(event) {
   }
 }
 
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js").then(() =>
+    console.log("Service Worker Registered")
+  );
+}
+
 window.onload = () => {
   settingsModal.style.display = "none";
   musicModal.style.display = "none";
   aboutModal.style.display = "none";
   switchMode("pomodoro");
 };
+
+
+
