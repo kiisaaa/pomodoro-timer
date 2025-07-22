@@ -97,7 +97,6 @@ function toggleTimer() {
         updateProgressBar();
         showNotification("Time's Up!", "Take a break or switch your mode.");
         if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
-
         if (alarm) alarm.play();
         if (audio && !audio.paused) audio.pause();
 
@@ -165,21 +164,34 @@ function loadMusic(event) {
   }
 }
 
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js").then(() =>
-    console.log("Service Worker Registered")
-  );
-}
-
-// Initial load
-window.onload = () => {
-  settingsModal.style.display = "none";
-  musicModal.style.display = "none";
-  aboutModal.style.display = "none";
-  switchMode("pomodoro");
+// ✅ Combine all setup inside DOMContentLoaded
+document.addEventListener("DOMContentLoaded", () => {
+  // Attach main button listeners
+  document.getElementById("start-btn").addEventListener("click", toggleTimer);
+  document.getElementById("settings-btn").addEventListener("click", openSettings);
+  document.getElementById("music-btn").addEventListener("click", openMusic);
+  document.getElementById("about-btn").addEventListener("click", openAbout);
+  document.getElementById("closeSettings").addEventListener("click", closeSettings);
+  document.getElementById("closeMusic").addEventListener("click", closeMusic);
+  document.getElementById("closeAbout").addEventListener("click", closeAbout);
+  document.getElementById("applySettings").addEventListener("click", applySettings);
+  document.getElementById("musicInput").addEventListener("change", loadMusic);
 
   // Ask for notification permission
   if ('Notification' in window && Notification.permission !== 'granted') {
     Notification.requestPermission();
   }
-};
+
+  // Hide modals and set mode
+  settingsModal.style.display = "none";
+  musicModal.style.display = "none";
+  aboutModal.style.display = "none";
+  switchMode("pomodoro");
+
+  // Register service worker
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.register("service-worker.js").then(() =>
+      console.log("Service Worker Registered")
+    );
+  }
+});
