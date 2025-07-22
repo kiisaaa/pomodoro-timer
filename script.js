@@ -1,4 +1,3 @@
-// script.js
 const timeSettings = {
   pomodoro: 25 * 60,
   shortBreak: 5 * 60,
@@ -11,7 +10,7 @@ let secondsLeft = totalSeconds;
 let isRunning = false;
 let timer;
 let currentMode = "pomodoro";
-let reverseStartTime;
+let reverseStartTime = null;
 
 const modeButtons = document.querySelectorAll(".mode-button");
 const earnedBreakDisplay = document.getElementById("earned-break");
@@ -22,18 +21,6 @@ const timerDisplay = document.getElementById("timer-display");
 const progressBar = document.getElementById("progress-bar");
 const progressPercent = document.getElementById("progress-percent");
 const audio = document.getElementById("bgm");
-const alarm = document.getElementById("alarmSound");
-
-// Request notification permission
-if ("Notification" in window && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
-
-function showNotification(title, message) {
-  if ("Notification" in window && Notification.permission === "granted") {
-    new Notification(title, { body: message });
-  }
-}
 
 function switchMode(mode) {
   clearInterval(timer);
@@ -41,30 +28,58 @@ function switchMode(mode) {
   currentMode = mode;
 
   modeButtons.forEach(btn => btn.classList.remove("active"));
-  const activeBtn = document.getElementById(`${mode}-mode`);
-  if (activeBtn) activeBtn.classList.add("active");
+  document.getElementById(`${mode}-mode`).classList.add("active");
 
   if (mode === "reverse") {
     totalSeconds = timeSettings.reverse;
     reverseStartTime = Date.now();
-  } else if (mode === "shortBreak") {
-    totalSeconds = timeSettings.shortBreak;
-  } else if (mode === "longBreak") {
-    totalSeconds = timeSettings.longBreak;
+    earnedBreakDisplay.style.display = "block";
+    earnedBreakDisplay.innerText = "Work for up to 1 hour. The longer you work, the longer break you earn.";
+    document.getElementById("shortBreak-mode").style.display = "none";
+    document.getElementById("longBreak-mode").style.display = "none";
   } else {
-    totalSeconds = timeSettings.pomodoro;
+    totalSeconds = timeSettings[mode];
+    earnedBreakDisplay.style.display = "none";
+    document.getElementById("shortBreak-mode").style.display = "inline-block";
+    document.getElementById("longBreak-mode").style.display = "inline-block";
   }
 
   secondsLeft = totalSeconds;
   updateDisplay();
   updateProgressBar();
+}
 
-  document.getElementById("shortBreak-mode").style.display = mode === "reverse" ? "none" : "inline-block";
-  document.getElementById("longBreak-mode").style.display = mode === "reverse" ? "none" : "inline-block";
-  earnedBreakDisplay.style.display = mode === "reverse" ? "block" : "none";
+function toggleTimer() {
+  if (isRunning) {
+    clearInterval(timer);
+    isRunning = false;
+  } else {
+    isRunning = true;
+    timer = setInterval(() => {
+      if (secondsLeft > 0) {
+        secondsLeft--;
+        updateDisplay();
+        updateProgressBar();
+      } else {
+        clearInterval(timer);
+        isRunning = false;
+        alert("Time's up!");
+        if (audio && !audio.paused) audio.pause();
 
-  if (mode === "reverse") {
-    earnedBreakDisplay.textContent = "Work for up to 1 hour. The longer you work, the longer break you earn.";
+        if (currentMode === "reverse") {
+          const minutesWorked = Math.floor((Date.now() - reverseStartTime) / 60000);
+          let earned = 0;
+
+          if (minutesWorked >= 56) earned = 30;
+          else if (minutesWorked >= 46) earned = 15;
+          else if (minutesWorked >= 31) earned = 10;
+          else if (minutesWorked >= 21) earned = 5;
+          else if (minutesWorked >= 5) earned = 2;
+
+          alert(`You earned a ${earned}-minute break!`);
+        }
+      }
+    }, 1000);
   }
 }
 
@@ -80,50 +95,29 @@ function updateProgressBar() {
   progressPercent.textContent = `${percent}%`;
 }
 
-function toggleTimer() {
-  if (isRunning) {
-    clearInterval(timer);
-    isRunning = false;
-  } else {
-    isRunning = true;
-    showNotification("Pomodoro Started", "Your focus timer has begun!");
-    timer = setInterval(() => {
-      if (secondsLeft > 0) {
-        secondsLeft--;
-        updateDisplay();
-        updateProgressBar();
-      } else {
-        clearInterval(timer);
-        isRunning = false;
-        updateProgressBar();
-        showNotification("Time's Up!", "Take a break or switch your mode.");
-        if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
-        if (alarm) alarm.play();
-        if (audio && !audio.paused) audio.pause();
-
-        if (currentMode === "reverse") {
-          const workedTime = Math.floor((Date.now() - reverseStartTime) / 1000 / 60);
-          let earned = 0;
-          if (workedTime >= 5 && workedTime <= 20) earned = 2;
-          else if (workedTime >= 21 && workedTime <= 30) earned = 5;
-          else if (workedTime >= 31 && workedTime <= 45) earned = 10;
-          else if (workedTime >= 46 && workedTime <= 55) earned = 15;
-          else if (workedTime >= 56 && workedTime <= 60) earned = 30;
-
-          alert(`You earned a ${earned}-minute break!`);
-        }
-      }
-    }, 1000);
-  }
+function openSettings() {
+  settingsModal.style.display = "flex";
 }
 
-// Modal control
-function openSettings() { settingsModal.style.display = "flex"; }
-function closeSettings() { settingsModal.style.display = "none"; }
-function openMusic() { musicModal.style.display = "flex"; }
-function closeMusic() { musicModal.style.display = "none"; }
-function openAbout() { aboutModal.style.display = "flex"; }
-function closeAbout() { aboutModal.style.display = "none"; }
+function closeSettings() {
+  settingsModal.style.display = "none";
+}
+
+function openMusic() {
+  musicModal.style.display = "flex";
+}
+
+function closeMusic() {
+  musicModal.style.display = "none";
+}
+
+function openAbout() {
+  aboutModal.style.display = "flex";
+}
+
+function closeAbout() {
+  aboutModal.style.display = "none";
+}
 
 function applySettings() {
   const pomodoro = parseInt(document.getElementById("setPomodoro").value) || 25;
@@ -154,23 +148,9 @@ function loadMusic(event) {
   }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("start-btn").addEventListener("click", toggleTimer);
-  document.getElementById("settings-btn").addEventListener("click", openSettings);
-  document.getElementById("closeSettings").addEventListener("click", closeSettings);
-  document.getElementById("applySettings").addEventListener("click", applySettings);
-
-  document.getElementById("music-btn").addEventListener("click", openMusic);
-  document.getElementById("closeMusic").addEventListener("click", closeMusic);
-  document.getElementById("musicInput").addEventListener("change", loadMusic);
-
-  document.getElementById("about-btn").addEventListener("click", openAbout);
-  document.getElementById("closeAbout").addEventListener("click", closeAbout);
-
-  // Hide modals on start
+window.onload = () => {
   settingsModal.style.display = "none";
   musicModal.style.display = "none";
   aboutModal.style.display = "none";
-
   switchMode("pomodoro");
-});
+};

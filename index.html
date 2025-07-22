@@ -2,16 +2,14 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Pomodoro Timer</title>
   <link rel="stylesheet" href="style.css" />
-  <link rel="manifest" href="manifest.json" />
-  <link rel="icon" href="icon-192.png" />
-  <meta name="theme-color" content="#ff69b4" />
 </head>
 <body>
   <div class="container">
     <h1>Pomodoro Timer</h1>
+
     <div class="mode-buttons">
       <button class="mode-button active" id="pomodoro-mode" onclick="switchMode('pomodoro')">Pomodoro</button>
       <button class="mode-button" id="shortBreak-mode" onclick="switchMode('shortBreak')">Short Break</button>
@@ -20,62 +18,71 @@
     </div>
 
     <div class="timer" id="timer-display">25:00</div>
+
     <div class="progress-wrap">
       <div id="progress-container">
         <div id="progress-bar"></div>
       </div>
       <div id="progress-percent">0%</div>
     </div>
-    <p id="earned-break" style="display: none;">Earned Break: <span id="earned-time">0</span> minutes</p>
 
-    <button id="start-btn">Start</button>
-    <button id="settings-btn">Settings</button>
-    <button id="music-btn">BGM</button>
-    <button id="about-btn">About</button>
-  </div>
+    <div id="earned-break" style="display: none;"></div>
 
-  <div id="settingsModal" class="modal">
-    <div class="modal-content">
-      <span class="close" id="closeSettings">&times;</span>
-      <h2>Settings</h2>
-      <label>Pomodoro (min): <input type="number" id="setPomodoro" value="25" /></label>
-      <label>Short Break (min): <input type="number" id="setShort" value="5" /></label>
-      <label>Long Break (min): <input type="number" id="setLong" value="15" /></label>
-      <label>Reverse (min): <input type="number" id="setReverse" value="5" /></label>
-      <label>Primary Color: <input type="color" id="primaryColor" value="#ff69b4" /></label>
-      <label>Secondary Color: <input type="color" id="secondaryColor" value="#ffc0cb" /></label>
-      <button id="applySettings">Apply</button>
+    <div class="controls">
+      <button class="start-button" onclick="toggleTimer()">Start / Pause</button>
+      <button onclick="openSettings()">Settings</button>
+      <button onclick="openMusic()">BGM</button>
+      <button onclick="openAbout()">About</button>
     </div>
   </div>
 
-  <div id="musicModal" class="modal">
+  <!-- Settings Modal -->
+  <div class="modal" id="settingsModal">
     <div class="modal-content">
-      <span class="close" id="closeMusic">&times;</span>
+      <span class="close" onclick="closeSettings()">&times;</span>
+      <h2>Timer Settings</h2>
+      <label for="setPomodoro">Pomodoro (mins)</label>
+      <input type="number" id="setPomodoro" value="25" />
+      <label for="setShort">Short Break (mins)</label>
+      <input type="number" id="setShort" value="5" />
+      <label for="setLong">Long Break (mins)</label>
+      <input type="number" id="setLong" value="15" />
+      <label for="setReverse">Reverse Mode Start (mins)</label>
+      <input type="number" id="setReverse" value="5" />
+
+      <label for="primaryColor">Primary Color</label>
+      <input type="color" id="primaryColor" value="#ff69b4" />
+
+      <label for="secondaryColor">Secondary Color</label>
+      <input type="color" id="secondaryColor" value="#ffc0cb" />
+
+      <button onclick="applySettings()">Apply</button>
+    </div>
+  </div>
+
+  <!-- Music Modal -->
+  <div class="modal" id="musicModal">
+    <div class="modal-content">
+      <span class="close" onclick="closeMusic()">&times;</span>
       <h2>Background Music</h2>
-      <input type="file" id="musicInput" accept="audio/*" />
+      <input type="file" accept="audio/*" onchange="loadMusic(event)" />
       <audio id="bgm" controls style="width: 100%; margin-top: 10px;"></audio>
     </div>
   </div>
 
-  <div id="aboutModal" class="modal">
+  <!-- About Modal -->
+  <div class="modal" id="aboutModal">
     <div class="modal-content">
-      <span class="close" id="closeAbout">&times;</span>
-      <h2>About</h2>
-      <p>I created this as a gift for my girl, a hardworking student with countless tasks on her plate. This Pomodoro timer is a reminder to rest between all her hard work. It's not just a study tool — it's my way of saying I care about her well-being too.</p>
+      <span class="close" onclick="closeAbout()">&times;</span>
+      <h2>About This App</h2>
+      <p style="margin-top: 10px; font-size: 1rem;">
+        I created this as a gift for my girl — a hardworking student with countless tasks on her plate.
+        This Pomodoro timer is a gentle reminder to take breaks between all her efforts.
+        It's not just a study tool — it's my way of saying: "I care about your well-being, too."
+      </p>
     </div>
   </div>
 
-  <audio id="alarmSound" src="alarm.mp3" preload="auto"></audio>
   <script src="script.js"></script>
-
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('service-worker.js')
-          .then(reg => console.log('Service Worker registered', reg))
-          .catch(err => console.error('Service Worker registration failed', err));
-      });
-    }
-  </script>
 </body>
 </html>
