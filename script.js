@@ -1,3 +1,4 @@
+// script.js
 const timeSettings = {
   pomodoro: 25 * 60,
   shortBreak: 5 * 60,
@@ -23,18 +24,14 @@ const progressPercent = document.getElementById("progress-percent");
 const audio = document.getElementById("bgm");
 const alarm = document.getElementById("alarmSound");
 
-function showNotification(title, body) {
+// Request notification permission
+if ("Notification" in window && Notification.permission !== "granted") {
+  Notification.requestPermission();
+}
+
+function showNotification(title, message) {
   if ("Notification" in window && Notification.permission === "granted") {
-    navigator.serviceWorker.getRegistration().then(reg => {
-      if (reg) {
-        reg.showNotification(title, {
-          body: body,
-          icon: "icon-192.png",
-          vibrate: [200, 100, 200],
-          tag: "pomodoro-timer"
-        });
-      }
-    });
+    new Notification(title, { body: message });
   }
 }
 
@@ -50,8 +47,12 @@ function switchMode(mode) {
   if (mode === "reverse") {
     totalSeconds = timeSettings.reverse;
     reverseStartTime = Date.now();
+  } else if (mode === "shortBreak") {
+    totalSeconds = timeSettings.shortBreak;
+  } else if (mode === "longBreak") {
+    totalSeconds = timeSettings.longBreak;
   } else {
-    totalSeconds = timeSettings[mode];
+    totalSeconds = timeSettings.pomodoro;
   }
 
   secondsLeft = totalSeconds;
@@ -85,7 +86,7 @@ function toggleTimer() {
     isRunning = false;
   } else {
     isRunning = true;
-    showNotification("Pomodoro Started", "Stay focused!");
+    showNotification("Pomodoro Started", "Your focus timer has begun!");
     timer = setInterval(() => {
       if (secondsLeft > 0) {
         secondsLeft--;
@@ -94,10 +95,8 @@ function toggleTimer() {
       } else {
         clearInterval(timer);
         isRunning = false;
-        updateDisplay();
         updateProgressBar();
-
-        showNotification("Time's Up!", "Take a break!");
+        showNotification("Time's Up!", "Take a break or switch your mode.");
         if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
         if (alarm) alarm.play();
         if (audio && !audio.paused) audio.pause();
@@ -118,24 +117,13 @@ function toggleTimer() {
   }
 }
 
-function openSettings() {
-  settingsModal.style.display = "flex";
-}
-function closeSettings() {
-  settingsModal.style.display = "none";
-}
-function openMusic() {
-  musicModal.style.display = "flex";
-}
-function closeMusic() {
-  musicModal.style.display = "none";
-}
-function openAbout() {
-  aboutModal.style.display = "flex";
-}
-function closeAbout() {
-  aboutModal.style.display = "none";
-}
+// Modal control
+function openSettings() { settingsModal.style.display = "flex"; }
+function closeSettings() { settingsModal.style.display = "none"; }
+function openMusic() { musicModal.style.display = "flex"; }
+function closeMusic() { musicModal.style.display = "none"; }
+function openAbout() { aboutModal.style.display = "flex"; }
+function closeAbout() { aboutModal.style.display = "none"; }
 
 function applySettings() {
   const pomodoro = parseInt(document.getElementById("setPomodoro").value) || 25;
@@ -166,23 +154,23 @@ function loadMusic(event) {
   }
 }
 
-// Initialize
 document.addEventListener("DOMContentLoaded", () => {
-  // Ask for notification permission
-  if ('Notification' in window && Notification.permission !== 'granted') {
-    Notification.requestPermission().then(permission => {
-      if (permission !== 'granted') {
-        console.warn("Notifications are not enabled.");
-      }
-    });
-  }
+  document.getElementById("start-btn").addEventListener("click", toggleTimer);
+  document.getElementById("settings-btn").addEventListener("click", openSettings);
+  document.getElementById("closeSettings").addEventListener("click", closeSettings);
+  document.getElementById("applySettings").addEventListener("click", applySettings);
+
+  document.getElementById("music-btn").addEventListener("click", openMusic);
+  document.getElementById("closeMusic").addEventListener("click", closeMusic);
+  document.getElementById("musicInput").addEventListener("change", loadMusic);
+
+  document.getElementById("about-btn").addEventListener("click", openAbout);
+  document.getElementById("closeAbout").addEventListener("click", closeAbout);
+
+  // Hide modals on start
+  settingsModal.style.display = "none";
+  musicModal.style.display = "none";
+  aboutModal.style.display = "none";
 
   switchMode("pomodoro");
-
-  // Register service worker
-  if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("service-worker.js")
-      .then(() => console.log("Service Worker Registered"))
-      .catch(err => console.error("Service Worker Error:", err));
-  }
 });
