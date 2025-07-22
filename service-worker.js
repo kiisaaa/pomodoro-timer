@@ -1,4 +1,5 @@
 self.addEventListener("install", e => {
+  self.skipWaiting();
   e.waitUntil(
     caches.open("pomodoro-store").then(cache => {
       return cache.addAll([
@@ -12,6 +13,10 @@ self.addEventListener("install", e => {
       ]);
     })
   );
+});
+
+self.addEventListener("activate", e => {
+  self.clients.claim();
 });
 
 self.addEventListener("fetch", e => {

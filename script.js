@@ -24,9 +24,21 @@ const audio = document.getElementById("bgm");
 const alarm = document.getElementById("alarmSound");
 
 // Request permission for notifications
-if ("Notification" in window && Notification.permission !== "granted") {
-  Notification.requestPermission();
-}
+document.addEventListener("DOMContentLoaded", () => {
+  if ("Notification" in window && Notification.permission !== "granted") {
+    Notification.requestPermission().then(permission => {
+      console.log("Notification permission:", permission);
+    });
+  }
+
+  document.getElementById("start-btn").addEventListener("click", toggleTimer);
+
+  settingsModal.style.display = "none";
+  musicModal.style.display = "none";
+  aboutModal.style.display = "none";
+
+  switchMode("pomodoro");
+});
 
 function showNotification(title, message) {
   if ("Notification" in window && Notification.permission === "granted") {
@@ -65,7 +77,8 @@ function switchMode(mode) {
   earnedBreakDisplay.style.display = mode === "reverse" ? "block" : "none";
 
   if (mode === "reverse") {
-    earnedBreakDisplay.textContent = "Work for up to 1 hour. The longer you work, the longer break you earn.";
+    earnedBreakDisplay.textContent =
+      "Work for up to 1 hour. The longer you work, the longer break you earn.";
   }
 }
 
@@ -101,6 +114,7 @@ function toggleTimer() {
         clearInterval(timer);
         isRunning = false;
         updateProgressBar();
+
         showNotification("Time's Up!", "Take a break or switch your mode.");
         if ('vibrate' in navigator) navigator.vibrate([300, 100, 300]);
 
@@ -174,30 +188,7 @@ function loadMusic(event) {
 }
 
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js").then(() =>
-    console.log("Service Worker Registered")
-  );
+  navigator.serviceWorker
+    .register("service-worker.js?v=2")
+    .then(() => console.log("Service Worker Registered"));
 }
-
-document.addEventListener("DOMContentLoaded", () => {
-  // Attach button listeners AFTER DOM is ready
-  document.getElementById("start-btn").addEventListener("click", toggleTimer);
-
-  // Attach settings/music/about modal closers here if needed
-
-  settingsModal.style.display = "none";
-  musicModal.style.display = "none";
-  aboutModal.style.display = "none";
-
-  switchMode("pomodoro");
-});
-
-window.onload = () => {
-  settingsModal.style.display = "none";
-  musicModal.style.display = "none";
-  aboutModal.style.display = "none";
-  switchMode("pomodoro");
-};
-
-
-
