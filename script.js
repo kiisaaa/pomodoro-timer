@@ -179,6 +179,19 @@ if ("serviceWorker" in navigator) {
   );
 }
 
+document.addEventListener("DOMContentLoaded", () => {
+  // Attach button listeners AFTER DOM is ready
+  document.getElementById("start-btn").addEventListener("click", toggleTimer);
+
+  // Attach settings/music/about modal closers here if needed
+
+  settingsModal.style.display = "none";
+  musicModal.style.display = "none";
+  aboutModal.style.display = "none";
+
+  switchMode("pomodoro");
+});
+
 window.onload = () => {
   settingsModal.style.display = "none";
   musicModal.style.display = "none";
