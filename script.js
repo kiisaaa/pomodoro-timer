@@ -45,9 +45,10 @@ function sendNotification(title, body) {
         body,
         icon: 'icon-192.png',
         vibrate: [200, 100, 200],
-        tag: `${title}-${Date.now()}`, // unique tag to force re-show
-        renotify: true,
-        requireInteraction: false, // auto dismiss
+        tag: `${title}-${Date.now()}`, // Unique tag each time
+        renotify: false,
+        requireInteraction: false, // Allows auto-dismiss
+        silent: false
       });
     });
   }
