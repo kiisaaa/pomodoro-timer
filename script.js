@@ -38,21 +38,22 @@ if ('Notification' in window) {
 }
 
 // Send notification with auto-close behavior (to allow re-showing)
-function sendNotification(title, body) {
+function sendNotification(title, body, tag = "timer-status") {
   if (Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(registration => {
       registration.showNotification(title, {
         body,
         icon: 'icon-192.png',
         vibrate: [200, 100, 200],
-        tag: `${title}-${Date.now()}`, // Unique tag each time
-        renotify: false,
-        requireInteraction: false, // Allows auto-dismiss
+        tag, // Same tag will overwrite previous
+        renotify: true, // Re-alert even if tag is same
+        requireInteraction: false, // Try to auto-dismiss
         silent: false
       });
     });
   }
 }
+
 
 function switchMode(mode) {
   // Confirm if user is trying to switch while timer is active
