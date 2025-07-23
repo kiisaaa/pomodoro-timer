@@ -1,3 +1,4 @@
+// === Same variable declarations as before ===
 const timeSettings = {
   pomodoro: 25 * 60,
   shortBreak: 5 * 60,
@@ -36,20 +37,29 @@ if ('Notification' in window) {
   });
 }
 
+// Send notification with auto-close behavior (to allow re-showing)
 function sendNotification(title, body) {
   if (Notification.permission === 'granted') {
     navigator.serviceWorker.ready.then(registration => {
       registration.showNotification(title, {
-        body: body,
+        body,
         icon: 'icon-192.png',
         vibrate: [200, 100, 200],
-        tag: 'pomodoro-timer',
+        tag: `${title}-${Date.now()}`, // unique tag to force re-show
+        renotify: true,
+        requireInteraction: false, // auto dismiss
       });
     });
   }
 }
 
 function switchMode(mode) {
+  // Confirm if user is trying to switch while timer is active
+  if (isRunning) {
+    const confirmSwitch = confirm("The timer is still running. Do you want to switch modes?");
+    if (!confirmSwitch) return;
+  }
+
   clearInterval(timer);
   isRunning = false;
   currentMode = mode;
@@ -80,9 +90,10 @@ function toggleTimer() {
   if (isRunning) {
     clearInterval(timer);
     isRunning = false;
+    sendNotification("Timer Paused", `Your ${currentMode} timer is paused.`);
   } else {
     isRunning = true;
-    sendNotification("Timer started", `Your ${currentMode} timer has started.`);
+    sendNotification("Timer Started", `Your ${currentMode} timer has started.`);
     timer = setInterval(() => {
       if (secondsLeft > 0) {
         secondsLeft--;
@@ -91,7 +102,7 @@ function toggleTimer() {
       } else {
         clearInterval(timer);
         isRunning = false;
-        sendNotification("Time's up!", `Your ${currentMode} session is over.`);
+        sendNotification("Time's Up!", `Your ${currentMode} session is over.`);
         alarmSound.play();
 
         if (audio && !audio.paused) audio.pause();
