@@ -1,14 +1,22 @@
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', () => self.clients.claim());
+const CACHE_NAME = 'pomodoro-cache-v1';
+const urlsToCache = [
+  '/',
+  '/index.html',
+  '/style.css',
+  '/script.js',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
+];
 
-self.addEventListener('notificationclick', event => {
-  event.notification.close();
+self.addEventListener('install', (event) => {
   event.waitUntil(
-    clients.matchAll({ type: 'window' }).then(windowClients => {
-      for (let client of windowClients) {
-        if (client.url === '/' && 'focus' in client) return client.focus();
-      }
-      if (clients.openWindow) return clients.openWindow('/');
-    })
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache))
+  );
+});
+
+self.addEventListener('fetch', (event) => {
+  event.respondWith(
+    caches.match(event.request).then((response) => response || fetch(event.request))
   );
 });
