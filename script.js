@@ -137,28 +137,26 @@ function updateProgressBar() {
 }
 
 function openSettings() {
-  settingsModal.style.display = "flex";
+  document.getElementById("settingsModal").style.display = "flex";
 }
-
 function closeSettings() {
-  settingsModal.style.display = "none";
+  document.getElementById("settingsModal").style.display = "none";
 }
 
 function openMusic() {
-  musicModal.style.display = "flex";
+  document.getElementById("musicModal").style.display = "flex";
 }
-
 function closeMusic() {
-  musicModal.style.display = "none";
+  document.getElementById("musicModal").style.display = "none";
 }
 
 function openAbout() {
-  aboutModal.style.display = "flex";
+  document.getElementById("aboutModal").style.display = "flex";
+}
+function closeAbout() {
+  document.getElementById("aboutModal").style.display = "none";
 }
 
-function closeAbout() {
-  aboutModal.style.display = "none";
-}
 
 function applySettings() {
   const pomodoro = parseInt(document.getElementById("setPomodoro").value) || 25;
