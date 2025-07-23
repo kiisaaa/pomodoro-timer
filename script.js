@@ -22,6 +22,33 @@ const progressBar = document.getElementById("progress-bar");
 const progressPercent = document.getElementById("progress-percent");
 const audio = document.getElementById("bgm");
 
+const alarmSound = new Audio("alarm.mp3");
+
+// Register service worker
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('service-worker.js');
+}
+
+// Request notification permission
+if ('Notification' in window) {
+  Notification.requestPermission().then(result => {
+    console.log("Notification permission:", result);
+  });
+}
+
+function sendNotification(title, body) {
+  if (Notification.permission === 'granted') {
+    navigator.serviceWorker.ready.then(registration => {
+      registration.showNotification(title, {
+        body: body,
+        icon: 'icon-192.png',
+        vibrate: [200, 100, 200],
+        tag: 'pomodoro-timer',
+      });
+    });
+  }
+}
+
 function switchMode(mode) {
   clearInterval(timer);
   isRunning = false;
@@ -55,6 +82,7 @@ function toggleTimer() {
     isRunning = false;
   } else {
     isRunning = true;
+    sendNotification("Timer started", `Your ${currentMode} timer has started.`);
     timer = setInterval(() => {
       if (secondsLeft > 0) {
         secondsLeft--;
@@ -63,19 +91,19 @@ function toggleTimer() {
       } else {
         clearInterval(timer);
         isRunning = false;
-        alert("Time's up!");
+        sendNotification("Time's up!", `Your ${currentMode} session is over.`);
+        alarmSound.play();
+
         if (audio && !audio.paused) audio.pause();
 
         if (currentMode === "reverse") {
           const minutesWorked = Math.floor((Date.now() - reverseStartTime) / 60000);
           let earned = 0;
-
           if (minutesWorked >= 56) earned = 30;
           else if (minutesWorked >= 46) earned = 15;
           else if (minutesWorked >= 31) earned = 10;
           else if (minutesWorked >= 21) earned = 5;
           else if (minutesWorked >= 5) earned = 2;
-
           alert(`You earned a ${earned}-minute break!`);
         }
       }
